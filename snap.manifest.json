@@ -1,0 +1,30 @@
+{
+  "version": "0.0.1",
+  "description": "Noves Foresight Snap.",
+  "proposedName": "Foresight",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Noves-Inc/foresight-snap.git"
+  },
+  "source": {
+    "shasum": "qCaulwsst4OkMO609LFaMwqpfclqaF6gsebtT4rIHRI=",
+    "location": {
+      "npm": {
+        "filePath": "dist/bundle.js",
+        "iconPath": "images/noves.svg",
+        "packageName": "foresight",
+        "registry": "https://registry.npmjs.org/"
+      }
+    }
+  },
+  "initialPermissions": {
+    "endowment:transaction-insight": {},
+    "endowment:ethereum-provider": {},
+    "endowment:network-access": {},
+    "endowment:rpc": {
+      "dapps": true,
+      "snaps": false
+    }
+  },
+  "manifestVersion": "0.1"
+}
