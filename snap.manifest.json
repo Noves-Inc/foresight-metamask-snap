@@ -7,12 +7,12 @@
     "url": "https://github.com/Noves-Inc/foresight-snap.git"
   },
   "source": {
-    "shasum": "qCaulwsst4OkMO609LFaMwqpfclqaF6gsebtT4rIHRI=",
+    "shasum": "vs4tZ/tyYZpTMHJS06j92JTZl/lJoeg3NT+v7PlzGV4=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
         "iconPath": "images/noves.svg",
-        "packageName": "foresight",
+        "packageName": "noves-foresight",
         "registry": "https://registry.npmjs.org/"
       }
     }
