@@ -1,5 +1,5 @@
 {
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Noves Foresight Snap.",
   "proposedName": "Foresight",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/Noves-Inc/foresight-metamask-snap"
   },
   "source": {
-    "shasum": "3ZVGFkA1SLKmI3gTafK9ZHXsfeSCkhvbQaZeBsRcY1M=",
+    "shasum": "2FcjaP7UgfBgMd+fG177cEHv6QyzAsFKRoJrV7p8HN8=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

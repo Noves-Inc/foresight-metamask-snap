@@ -88,94 +88,87 @@ export const onTransaction: OnTransactionHandler = async ({
 
       const perspectiveAddress = transaction.from.toLowerCase();
 
-      const sentItems = data.classificationData.sent;
-      const receivedItems = data.classificationData.received;
+      panelContent = [text(header), heading(description)];
 
-      const sentItemsPaidGas = sentItems.filter(
-        (item: { action: string }) => item.action === 'paidGas',
-      );
-      const sentItemsOther = sentItems.filter(
-        (item: { action: string }) => item.action !== 'paidGas',
-      );
-
-      const txItems = [
-        ...sentItemsOther,
-        ...receivedItems,
-        ...sentItemsPaidGas,
-      ];
-
-      const items = txItems.map((item: any) => {
-        const action = {
-          label: item.action,
-          amount: item.amount || undefined,
-          flowDirection: getFlowDirection(item, perspectiveAddress),
-          nft: item.nft || undefined,
-          token: item.token || undefined,
-        };
-        const rightActor = getRightActor(item, perspectiveAddress);
-        const leftActor = getLeftActor(item, perspectiveAddress);
-        return { action, rightActor, leftActor };
-      });
-
-      panelContent = [
-        text(header),
-        heading(description),
-        divider(),
-        heading('Balance changes'),
-      ];
-
-      // Balance changes view
-      items.forEach((item) => {
-        panelContent.push(
-          text(
-            `${item.action.flowDirection === 'toRight' ? '⛔' : '✅'}
-            ${item.action.flowDirection === 'toRight' ? '**-**' : '**+**'}
-            ${String(item.action.amount)}
-            ${item.action.token?.symbol?.toString() ||
-            (item.action.nft && item.action.nft?.symbol?.toString())
-            }`,
-          ),
+      if (data.classificationData.sent || data.classificationData.received) {
+        const sentItems = data.classificationData.sent;
+        const receivedItems = data.classificationData.received;
+        const sentItemsPaidGas = sentItems.filter(
+          (item: { action: string }) => item.action === 'paidGas',
         );
-      });
-
-      panelContent.push(divider(), heading('Details'));
-      // Flow view
-      items.forEach((item, index) => {
-        const fromActor =
-          item.action.flowDirection === 'toLeft'
-            ? item.rightActor
-            : item.leftActor;
-        const toActor =
-          item.action.flowDirection === 'toLeft'
-            ? item.leftActor
-            : item.rightActor;
-        panelContent.push(
-          row(
-            `${item.action.flowDirection === 'toRight' ? '⛔' : '✅'} ${camelCaseToSentence(item.action.label)}`,
+        const sentItemsOther = sentItems.filter(
+          (item: { action: string }) => item.action !== 'paidGas',
+        );
+        const txItems = [
+          ...sentItemsOther,
+          ...receivedItems,
+          ...sentItemsPaidGas,
+        ];
+        const items = txItems.map((item: any) => {
+          const action = {
+            label: item.action,
+            amount: item.amount || undefined,
+            flowDirection: getFlowDirection(item, perspectiveAddress),
+            nft: item.nft || undefined,
+            token: item.token || undefined,
+          };
+          const rightActor = getRightActor(item, perspectiveAddress);
+          const leftActor = getLeftActor(item, perspectiveAddress);
+          return { action, rightActor, leftActor };
+        });
+        panelContent.push(divider(), heading('Balance changes'));
+        // Balance changes view
+        items.forEach((item) => {
+          panelContent.push(
             text(
-              `${item.action.amount} ${item.action.token?.symbol || item.action.nft?.symbol
+              `${item.action.flowDirection === 'toRight' ? '⛔' : '✅'}
+              ${item.action.flowDirection === 'toRight' ? '**-**' : '**+**'}
+              ${String(item.action.amount)}
+              ${item.action.token?.symbol?.toString() ||
+              (item.action.nft && item.action.nft?.symbol?.toString())
               }`,
             ),
-          ),
-          row(
-            'From: ',
-            address(
-              fromActor.address ??
-              '0x0000000000000000000000000000000000000000',
+          );
+        });
+        panelContent.push(divider(), heading('Details'));
+        // Flow view
+        items.forEach((item, index) => {
+          const fromActor =
+            item.action.flowDirection === 'toLeft'
+              ? item.rightActor
+              : item.leftActor;
+          const toActor =
+            item.action.flowDirection === 'toLeft'
+              ? item.leftActor
+              : item.rightActor;
+          panelContent.push(
+            row(
+              `${item.action.flowDirection === 'toRight' ? '⛔' : '✅'} ${camelCaseToSentence(item.action.label)}`,
+              text(
+                `${item.action.amount} ${item.action.token?.symbol || item.action.nft?.symbol
+                }`,
+              ),
             ),
-          ),
-          row(
-            'To: ',
-            address(
-              toActor.address ??
-              '0x0000000000000000000000000000000000000000',
+            row(
+              'From: ',
+              address(
+                fromActor.address ??
+                '0x0000000000000000000000000000000000000000',
+              ),
             ),
-          ),
-        );
-        if (index < items.length - 1) {
-          panelContent.push(divider());
-        }
-      });
+            row(
+              'To: ',
+              address(
+                toActor.address ??
+                '0x0000000000000000000000000000000000000000',
+              ),
+            ),
+          );
+          if (index < items.length - 1) {
+            panelContent.push(divider());
+          }
+        });
+      }
 
       return {
         content: panel(panelContent),
