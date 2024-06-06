@@ -1,7 +1,7 @@
 {
-  "version": "0.0.3",
-  "description": "Noves Foresight Snap.",
-  "proposedName": "Foresight",
+  "version": "0.0.4",
+  "description": "Foresight by Noves",
+  "proposedName": "Foresight by Noves",
   "repository": {
     "type": "git",
     "url": "https://github.com/Noves-Inc/foresight-metamask-snap"
