@@ -8,7 +8,6 @@ import {
 } from '@metamask/snaps-sdk';
 import type { OnTransactionHandler } from '@metamask/snaps-types';
 
-import type { ChainsResponse } from './types';
 import {
   getFlowDirection,
   getLeftActor,
@@ -49,29 +48,8 @@ export const onTransaction: OnTransactionHandler = async ({
   let panelContent: any[] = [];
 
   try {
-    const decimalChainId = parseInt(chainId.split(':')[1], 16);
-
-    const chainsRes = await fetch(
-      'https://foresight-snap-gateway.noves.fi/evm/chains',
-      {
-        headers: new Headers({
-          'Content-Type': 'application/json',
-        }),
-      },
-    );
-
-    const chains: ChainsResponse[] = await chainsRes.json();
-
-    let chain = chains.find((_chain) => _chain.evmChainId === decimalChainId);
-
-    if (!chain) {
-      chain = chains.find(
-        (_chain) => _chain.evmChainId === parseInt(chainId.split(':')[1], 10),
-      );
-    }
-
     const res = await fetch(
-      `https://foresight-snap-gateway.noves.fi/evm/${chain?.name}/preview`,
+      `https://foresight-snap-gateway.noves.fi/evm/${chainId}/previewcaip`,
       {
         method: 'POST',
         body: JSON.stringify(postData),
@@ -80,101 +58,119 @@ export const onTransaction: OnTransactionHandler = async ({
         },
       },
     );
-
-    const data = await res.json();
-
-    if (res.ok) {
-      description = data.classificationData.description;
-
-      const perspectiveAddress = transaction.from.toLowerCase();
-
-      panelContent = [text(header), heading(description)];
-
-      if (data.classificationData.sent || data.classificationData.received) {
-        const sentItems = data.classificationData.sent;
-        const receivedItems = data.classificationData.received;
-        const sentItemsPaidGas = sentItems.filter(
-          (item: { action: string }) => item.action === 'paidGas',
-        );
-        const sentItemsOther = sentItems.filter(
-          (item: { action: string }) => item.action !== 'paidGas',
-        );
-        const txItems = [
-          ...sentItemsOther,
-          ...receivedItems,
-          ...sentItemsPaidGas,
-        ];
-        const items = txItems.map((item: any) => {
-          const action = {
-            label: item.action,
-            amount: item.amount || undefined,
-            flowDirection: getFlowDirection(item, perspectiveAddress),
-            nft: item.nft || undefined,
-            token: item.token || undefined,
-          };
-          const rightActor = getRightActor(item, perspectiveAddress);
-          const leftActor = getLeftActor(item, perspectiveAddress);
-          return { action, rightActor, leftActor };
-        });
-        panelContent.push(divider(), heading('Balance changes'));
-        // Balance changes view
-        items.forEach((item) => {
-          panelContent.push(
-            text(
-              `${item.action.flowDirection === 'toRight' ? '⛔' : '✅'}
-              ${item.action.flowDirection === 'toRight' ? '**-**' : '**+**'}
-              ${String(item.action.amount)}
-              ${item.action.token?.symbol?.toString() ||
-              (item.action.nft && item.action.nft?.symbol?.toString())
-              }`,
-            ),
-          );
-        });
-        panelContent.push(divider(), heading('Details'));
-        // Flow view
-        items.forEach((item, index) => {
-          const fromActor =
-            item.action.flowDirection === 'toLeft'
-              ? item.rightActor
-              : item.leftActor;
-          const toActor =
-            item.action.flowDirection === 'toLeft'
-              ? item.leftActor
-              : item.rightActor;
-          panelContent.push(
-            row(
-              `${item.action.flowDirection === 'toRight' ? '⛔' : '✅'} ${camelCaseToSentence(item.action.label)}`,
-              text(
-                `${item.action.amount} ${item.action.token?.symbol || item.action.nft?.symbol
-                }`,
-              ),
-            ),
-            row(
-              'From: ',
-              address(
-                fromActor.address ??
-                '0x0000000000000000000000000000000000000000',
-              ),
-            ),
-            row(
-              'To: ',
-              address(
-                toActor.address ??
-                '0x0000000000000000000000000000000000000000',
-              ),
-            ),
-          );
-          if (index < items.length - 1) {
-            panelContent.push(divider());
-          }
-        });
+    if (!res.ok) {
+      if (res.status === 404) {
+        return {
+          content: panel([
+            text('This chain is not supported yet, check back soon 🙂'),
+          ]),
+        };
+      } else if (res.status === 412) {
+        return {
+          content: panel([
+            text('Insufficient funds to execute this transaction'),
+          ]),
+        };
       }
 
       return {
-        content: panel(panelContent),
+        content: panel([text("Something went wrong. We're working on it!")]),
       };
     }
-  } catch (error) {
-    console.error(error);
+
+    const data = await res.json();
+    description = data.classificationData.description;
+
+    const perspectiveAddress = transaction.from.toLowerCase();
+
+    panelContent = [text(header), heading(description)];
+
+    if (data.classificationData.sent || data.classificationData.received) {
+      const sentItems = data.classificationData.sent;
+      const receivedItems = data.classificationData.received;
+      const sentItemsPaidGas = sentItems.filter(
+        (item: { action: string }) => item.action === 'paidGas',
+      );
+      const sentItemsOther = sentItems.filter(
+        (item: { action: string }) => item.action !== 'paidGas',
+      );
+      const txItems = [
+        ...sentItemsOther,
+        ...receivedItems,
+        ...sentItemsPaidGas,
+      ];
+      const items = txItems.map((item: any) => {
+        const action = {
+          label: item.action,
+          amount: item.amount || undefined,
+          flowDirection: getFlowDirection(item, perspectiveAddress),
+          nft: item.nft || undefined,
+          token: item.token || undefined,
+        };
+        const rightActor = getRightActor(item, perspectiveAddress);
+        const leftActor = getLeftActor(item, perspectiveAddress);
+        return { action, rightActor, leftActor };
+      });
+      panelContent.push(divider(), heading('Balance changes'));
+      // Balance changes view
+      items.forEach((item) => {
+        panelContent.push(
+          text(
+            `${item.action.flowDirection === 'toRight' ? '⛔' : '✅'}
+                  ${item.action.flowDirection === 'toRight' ? '**-**' : '**+**'}
+                  ${String(item.action.amount)}
+                  ${
+                    item.action.token?.symbol?.toString() ||
+                    (item.action.nft && item.action.nft?.symbol?.toString())
+                  }`,
+          ),
+        );
+      });
+      panelContent.push(divider(), heading('Details'));
+      // Flow view
+      items.forEach((item, index) => {
+        const fromActor =
+          item.action.flowDirection === 'toLeft'
+            ? item.rightActor
+            : item.leftActor;
+        const toActor =
+          item.action.flowDirection === 'toLeft'
+            ? item.leftActor
+            : item.rightActor;
+        panelContent.push(
+          row(
+            `${
+              item.action.flowDirection === 'toRight' ? '⛔' : '✅'
+            } ${camelCaseToSentence(item.action.label)}`,
+            text(
+              `${item.action.amount} ${
+                item.action.token?.symbol || item.action.nft?.symbol
+              }`,
+            ),
+          ),
+          row(
+            'From: ',
+            address(
+              fromActor.address ?? '0x0000000000000000000000000000000000000000',
+            ),
+          ),
+          row(
+            'To: ',
+            address(
+              toActor.address ?? '0x0000000000000000000000000000000000000000',
+            ),
+          ),
+        );
+        if (index < items.length - 1) {
+          panelContent.push(divider());
+        }
+      });
+    }
+
+    return {
+      content: panel(panelContent),
+    };
+  } catch (exception) {
+    // console.error(exception);
   }
 };

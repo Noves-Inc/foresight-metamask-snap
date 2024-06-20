@@ -1,9 +1,3 @@
-export type ChainsResponse = {
-  name: string;
-  ecosystem: string;
-  evmChainId: number;
-};
-
 export type Token = {
   symbol: string;
   name: string;
